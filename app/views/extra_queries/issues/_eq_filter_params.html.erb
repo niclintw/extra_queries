@@ -1,0 +1,89 @@
+<fieldset id="eq-filter-params" class="collapsible collapsed">
+  <legend onclick="toggleFieldset(this);"><%= l(:eq_label_options) %></legend>
+  <div style="display: none;">
+    <div class="eq-panel eq-sort-items">
+      <% (query.sort_criteria || [['id', 'asc']]).each_with_index do |srt, index| %>
+        <%= link_to '', '#', class: 'eq-another-button', id: "f-sort_by_#{index}", title: l(:eq_label_sort), data: { field: "sort_by_#{index}" } %>
+
+        <div class='modal_window eq-filter-field' id='modal-f-sort_by_<%= index %>' style="padding-top: 10px;">
+          <div class="eq-filter-operator">
+            <%= select_tag('sort_direction[]', options_for_select([[l(:label_ascending),'asc'],[l(:label_descending),'desc']], srt[1]), class: 'eq-operator') %>
+          </div>
+          <div class='eq-filter-data'>
+            <div class="eq-filter-data-list eq-filter-data-item" data-operators="asc,desc">
+              <%= eq_filter_selector(query.available_columns.select(&:sortable?).sort_by(&:caption).collect { |column| [column.caption, column.name.to_s] }.sort { |x,y| (x[0] || '') <=> (y[0] || '') }, radio: true, name: "sort-#{index}") %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+      <%= link_to "<span>#{l(:eq_label_add_sort)}</span>".html_safe, '#', class: 'rm-icon fa-plus no_line in_link', id: 'eq-add-sort', style: (query.sort_criteria || []).size >= 3 ? 'display:none;' : nil %>
+    </div>
+
+
+    <div class="eq-panel">
+      <% if query.groupable_columns.present? %>
+        <%= link_to '', '#', class: 'eq-another-button', id: 'f-group_by', title: l(:eq_label_group), data: { field: 'group_by' } %>
+        <div class='modal_window eq-another-list' id='modal-f-group_by' style="padding-top: 10px;">
+          <div class='eq-filter-data'>
+            <div class="eq-filter-data-list eq-filter-data-item">
+              <%= eq_filter_selector(query.groupable_columns.collect { |c| [c.caption, c.name.to_s] }.sort { |x,y| (x[0] || '') <=> (y[0] || '') }, radio: true, name: 'group') %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% if Redmine::VERSION.to_s >= '3.2.0' && query.available_totalable_columns.present? %>
+        <%= link_to '', '#', class: 'eq-another-button', id: 'f-totalable', title: l(:label_total_plural), data: { field: 'totalable' } %>
+        <div class='modal_window eq-another-list' id='modal-f-totalable' style="padding-top: 10px;">
+          <div class='eq-filter-data'>
+            <div class="eq-filter-data-list eq-filter-data-item">
+              <%= eq_filter_selector(query.available_totalable_columns.collect { |c| [c.caption, c.name.to_s] }.sort { |x,y| (x[0] || '') <=> (y[0] || '') }) %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <% if query.available_block_columns.present? %>
+        <%= link_to '', '#', class: 'eq-another-button', id: 'f-show', title: l(:button_show), data: { field: 'show' } %>
+        <div class='modal_window eq-another-list' id='modal-f-show' style="padding-top: 10px;">
+          <div class='eq-filter-data'>
+            <div class="eq-filter-data-list eq-filter-data-item">
+              <%= eq_filter_selector(query.available_block_columns.map { |it| [it.caption.to_s, it.name.to_s] }.sort { |x,y| (x[0] || '') <=> (y[0] || '') }) %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="eq-panel" style="margin-bottom: 0;">
+      <table>
+        <tr>
+          <td id="eq-available-fields">
+            <%= l(:description_available_columns) %>
+            <div class='eq-filter-data'>
+              <div class="eq-filter-data-list eq-filter-data-item">
+                <%= eq_filter_selector(query_available_inline_columns_options(query).sort { |x,y| (x[0] || '') <=> (y[0] || '') }, class: 'eq-columns-list eq-available-columns-container') %>
+              </div>
+            </div>
+          </td>
+          <td style="box-sizing: border-box;">
+            <p>
+              <%= link_to('&#8594;'.html_safe, '#', class: 'eq-button eq-add-column', style: 'margin-bottom: 5px;') %>
+            </p>
+            <p>
+              <%= link_to('&#8592;'.html_safe, '#', class: 'eq-button eq-delete-column') %>
+            </p>
+          </td>
+          <td id="eq-selected-fields">
+            <%= l(:description_selected_columns) %>
+            <div class='eq-filter-data'>
+              <div class="eq-filter-data-list eq-filter-data-item">
+                <%= eq_filter_selector(query_selected_inline_columns_options(query), class: 'eq-columns-list eq-columns-container', id: 'eq-columns-container') %>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</fieldset>

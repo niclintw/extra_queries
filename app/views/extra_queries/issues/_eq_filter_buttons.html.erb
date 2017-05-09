@@ -1,0 +1,10 @@
+<%= link_to l(:button_apply), project ? project_issues_path(project) : issues_path, class: 'eq-button eq-button-success', id: 'eq-apply-query' %>
+<%= link_to l(:button_clear), { set_filter: 1, project_id: project }, class: 'eq-button' %>
+<% if User.current.allowed_to?(:save_queries, project, global: true) %>
+  <%= link_to l(:eq_label_save_as), new_query_path(_a: 1, project_id: project), class: 'eq-button', id: 'eq-query-save-as' %>
+<% end %>
+
+<% if !query.new_record? && query.editable_by?(User.current) %>
+  <%= link_to l(:eq_label_save), edit_query_path(query, _a: 1), class: 'eq-button', id: 'eq-query-save' %>
+  <%= delete_link query_path(query), class: 'eq-button' %>
+<% end %>

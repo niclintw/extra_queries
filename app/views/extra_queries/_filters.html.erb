@@ -1,0 +1,32 @@
+<% query ||= @query %>
+
+<div id="eq-filters">
+  <table class="eq-filters-table">
+    <tr>
+      <td>
+        <div class="eq-default">
+          <% query.eq_filters.select { |k,v| !v[:user] }.each do |k, v| %>
+            <%= eq_render_filter_field(query, k, v) %>
+          <% end %>
+        </div>
+        <div class="eq-user">
+          <% query.eq_filters.select { |k,v| v[:user] }.each do |k, v| %>
+            <%= eq_render_filter_field(query, k, v) %>
+          <% end %>
+        </div>
+      </td>
+      <td style="width: 1px; vertical-align: top;">
+        <%= link_to '', '#', id: 'f-fields-list', class: 'eq-fields-button', title: l(:label_filter_add), data: { field: 'fields-list', url: url_for(controller: :extra_queries, action: :add_filter, query_id: params[:query_id], type: query.type) } %>
+        <div class='modal_window eq-fields-list' id='modal-f-fields-list' style="padding-top: 10px;">
+          <div class="eq-filter-data">
+            <div class="eq-filter-data-list eq-filter-data-item">
+              <%= eq_filter_selector(query.available_filters.map { |field, field_options| [query.label_for(field), field] }.sort { |x,y| (x[0] || '') <=> (y[0] || '') }) %>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<%= render partial: "#{controller_name}/eq_filter_params", locals: { query: query } rescue '' %>

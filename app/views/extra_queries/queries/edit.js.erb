@@ -1,0 +1,6 @@
+<% if @query.errors.present? %>
+  $('#content').find('.flash').remove();
+  $('#errorExplanation').remove();
+
+  $('#eq-query-modal').find('.modal-body').prepend('<%= escape_javascript(error_messages_for(@query)) %>');
+<% end %>

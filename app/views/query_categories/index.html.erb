@@ -1,0 +1,72 @@
+<% heads_for_wiki_formatter %>
+
+<div class="contextual">
+  <%= link_to l(:eq_label_new_query_category), new_query_category_path, class: 'icon icon-add in_link eq_ajax_edit', data: {target: 'query_categories_form'} %>
+</div>
+
+<h2><%= l(:eq_label_query_categories) %></h2>
+
+<% if @query_categories.any? %>
+    <div class="autoscroll">
+      <table class="list">
+
+        <thead>
+            <tr>
+              <th><%= l(:field_name) %></th>
+              <th><%= l(:field_author) %></th>
+              <th>&nbsp;</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <% @query_categories.each do |qc| %>
+                <%= render partial: 'one_query_category', locals: {qc: qc} %>
+            <% end %>
+        </tbody>
+
+      </table>
+    </div>
+<% else %>
+    <p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>
+
+<div id="query_categories_form" class="modal I fade" tabindex="-1" role="dialog" aria-hidden="true" data-width="500px" data-height="90%" style="z-index: 1060;"></div>
+
+<script type="text/javascript" charset="utf-8">
+    $(document.body).on('click', '.eq_ajax_edit', function () {
+        var form_div = $('#'+$(this).attr('data-target'));
+        form_div.html('<div class="loader form_loader"></div>');
+        form_div.modal('show');
+        form_div.load(this.href, function () {
+            RMPlus.LIB.resize_bs_modal(form_div);
+        });
+        return false;
+    });
+
+
+    $("div.autoscroll > .list > thead > tr").append("<th></th>");
+    $("div.autoscroll > .list > tbody tr").append("<td class='ordered-hndl'> ≡ </td>");
+    $("div.autoscroll > .list > tbody").sortable({
+        cursor: 'move',
+        opacity: 0.6,
+        handle: '.ordered-hndl',
+        helper: function(e, tr) {
+            var cl = tr.clone();
+            cl.height(tr.outerHeight() - 1);
+            cl.css({ padding: 0, borderTop: '#ccc solid 1px', borderLeft: '#ccc solid 1px' });
+            var $originals = tr.children();
+            cl.children().each(function(index) {
+                $(this).width($originals.eq(index).width() + 1);
+            });
+            return cl;
+        },
+        update: function(event, ui){
+            $.ajax({
+                type: 'POST',
+                data: {query_category_id: ui.item.find('a[data-method="delete"]').attr('href').split('/').pop() ,new_position: ui.item.index()},
+                url: RMPlus.Utils.relative_url_root + '/query_categories/move_position'
+            });
+        }
+    })
+
+</script>

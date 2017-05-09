@@ -1,0 +1,36 @@
+<% @query.sort_criteria = @query.sort_criteria.blank? ? (@query.is_a?(IssueQuery) ? [['id', 'asc']] : [['spent_on', 'desc']]) : @query.sort_criteria %>
+
+<script type="text/javascript">
+  $('#query_form_with_buttons').hide();
+  RMPlus.EQ.query_class = '<%= @query.class.name %> ';
+  RMPlus.EQ.custom_query_page_enabled = <%= Setting.plugin_extra_queries['custom_query_page_enabled'] ? 1 : 0 %>;
+  RMPlus.EQ.custom_query_timelog_page_enabled = <%= Setting.plugin_extra_queries['custom_query_timelog_page_enabled'] ? 1 : 0 %>;
+  RMPlus.EQ.label_and = '<%= l(:eq_label_and) %>';
+  RMPlus.EQ.label_delete_filter = '<%= l(:eq_label_delete_filter) %>';
+  RMPlus.EQ.label_save_button = '<%= l(:button_save) %>';
+  RMPlus.EQ.label_cancel_button = '<%= l(:button_cancel) %>';
+  RMPlus.EQ.sort_label = '<%= l(:eq_label_sort) %>';
+  RMPlus.EQ.standalone_operators = <%= get_enabled_filters([]).to_json.html_safe %>;
+
+  RMPlus.EQ.saved_data = <%= (@query.filters || {}).inject({}) { |res, (k, v)| v[:values] = Array.wrap(v[:values]); res[k] ||= { e: v[:operator], v: v[:values] }; res; }.to_json.html_safe %>;
+  RMPlus.EQ.saved_data = RMPlus.EQ.saved_data || {};
+  RMPlus.EQ.saved_data['fields-list'] = <%= { e: '', v: (@query.filters || {}).keys }.to_json.html_safe %>;
+  <% sort = @query.sort_criteria || [] %>
+  <% sort.each_with_index do |srt, index| %>
+    RMPlus.EQ.saved_data['sort_by_<%= index %>'] = { e: '<%= srt[1] %>', v: ['<%= srt[0] %>'] };
+  <% end %>
+  RMPlus.EQ.saved_data['group_by'] = <%= { e: '', v: @query.group_by.present? ? [@query.group_by] : [] }.to_json.html_safe %>;
+  RMPlus.EQ.saved_data['show'] = <%= { e: '', v: @query.available_block_columns.select { |it| @query.has_column?(it) }.map { |it| it.name.to_s } }.to_json.html_safe %>;
+  <% if Redmine::Plugin.installed?(:clear_plan) && @query.is_a?(IssueQuery) %>
+    RMPlus.EQ.saved_data['cp_burndown'] = <%= { e: '', v: (@query.cp_burndown || []).compact }.to_json.html_safe %>;
+  <% end %>
+  <% if Redmine::VERSION.to_s >= '3.2.0' %>
+    RMPlus.EQ.saved_data['totalable'] = <%= { e: '', v: @query.totalable_names.present? ? @query.totalable_names : [] }.to_json.html_safe %>
+  <% end %>
+
+  RMPlus.EQ.query_form_content_html = '<%= escape_javascript(render(partial: 'extra_queries/filters', locals: { query: @query })) %>';
+  RMPlus.EQ.buttons_html = '<%= escape_javascript((render(partial: "#{controller_name}/eq_filter_buttons", locals: { query: @query, project: @project }) rescue '')) %>';
+
+  RMPlus.EQ.project_id = '<%= params[:project_id] %>';
+  RMPlus.EQ.saved_query_id = <%= (query.id || params[:saved_query_id]).to_i %>;
+</script>

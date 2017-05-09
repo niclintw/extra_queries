@@ -1,0 +1,233 @@
+<div class="modal-header">
+  <a href="#" class="fa fa-times eq-no-line eq-close" data-dismiss="modal" aria-hidden="true"></a>
+  <h3><%= @query.new_record? ? l(:label_query_new) : @query.name %></h3>
+</div>
+<div class="modal-body">
+  <%= error_messages_for @query %>
+
+  <%= hidden_field_tag 'gantt', '1' if params[:gantt] %>
+  <%= hidden_field_tag 'cp_burndown', '1' if params[:cp_burndown] %>
+
+  <% (@query.filters || {}).each do |k, f| %>
+    <%= hidden_field_tag 'f[]', k %>
+    <%= hidden_field_tag "op[#{k}]", f[:operator] %>
+    <% f[:values] = [f[:values]] if (f[:values].present? || f[:values] == '') && !f[:values].is_a?(Array) %>
+    <% (f[:values] || []).each do |v| %>
+      <%= hidden_field_tag "v[#{k}][]", v %>
+    <% end %>
+  <% end %>
+
+  <% (@query.sort_criteria || []).each_with_index do |sort, index| %>
+    <%= hidden_field_tag "query[sort_criteria][#{index}][]", sort[0] %>
+    <%= hidden_field_tag "query[sort_criteria][#{index}][]", sort[1] %>
+  <% end %>
+
+  <% if @query.group_by.present? %>
+    <%= hidden_field_tag 'query[group_by]', @query.group_by %>
+  <% end %>
+
+  <% (@query.column_names || []).each do |col| %>
+    <%= hidden_field_tag 'c[]', col %>
+  <% end %>
+
+  <table class="plugin_settings" style="width: 100%">
+    <tr>
+      <td>
+        <label for="query_name"><%=l(:field_name)%></label>
+      </td>
+      <td>
+        <%= text_field 'query', 'name', size: 80 %>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="query_category_id"><%= l(:eq_label_query_category) %></label>
+      </td>
+      <td>
+        <%= select_tag('query[category_id]', options_for_select([[]] + QueryCategory.order('name').map { |c| [c.name, c.id] }, @query.category_id), class: 'select2 eq-select2', 'data-combobox' => 'true', 'data-post-url' => Redmine::Utils.relative_url_root + '/query_categories/create_of_query', 'data-model-attribute' => 'name', 'data-select2-width' => '400px') %>
+      </td>
+    </tr>
+    <% if Setting.plugin_extra_queries['custom_query_sidebar_enabled'] && User.current.admin? %>
+      <tr>
+        <td></td>
+        <td>
+          <label for="query_eq_pinned">
+            <%= check_box_tag('query[eq_pinned]', '1', @query.eq_admin_pinned?) %>
+            &mdash;
+            <%= l(:eq_label_admin_pin_query) %>
+          </label>
+        </td>
+      </tr>
+    <% end %>
+    <% if Redmine::Plugin.installed?(:ajax_counters) && Setting.plugin_extra_queries['custom_query_counter_enabled'] && User.current.admin? %>
+        <tr>
+          <td></td>
+          <td>
+            <label for="query_eq_counter">
+              <%= hidden_field_tag('query[eq_counter]', false) %>
+              <%= check_box_tag('query[eq_counter]', true, @query.eq_counter) %>
+              &mdash;
+              <%= l(:eq_show_query_counter) %>
+            </label>
+          </td>
+        </tr>
+    <% end %>
+    <% if User.current.admin? || User.current.allowed_to?(:manage_public_queries, @query.project) %>
+      <tr>
+        <td>
+          <label><%= l(:field_visible) %></label>
+        </td>
+        <td>
+          <div style="margin-bottom: 5px">
+            <label style="display: block;"><%= radio_button 'query', 'visibility', Query::VISIBILITY_PRIVATE %> <%= l(:label_visibility_private) %></label>
+            <label style="display: block;"><%= radio_button 'query', 'visibility', Query::VISIBILITY_PUBLIC %> <%= l(:label_visibility_public) %></label>
+            <label style="display: block;"><%= radio_button 'query', 'visibility', Query::VISIBILITY_ROLES %> <%= l(:label_visibility_roles) %>:</label>
+          </div>
+          <div id="eq-roles-list">
+            <div class='eq-filter-data'>
+              <div class="eq-filter-data-list eq-filter-data-item">
+                <%= eq_filter_selector(Role.givable.sorted.map { |r| [r.name, r.id] }, selected: @query.roles.map { |it| it.id.to_s }, fullname: 'query[role_ids][]', class: 'eq-columns-list') %>
+                <%= hidden_field_tag 'query[role_ids][]', '' %>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    <% end %>
+    <tr>
+      <td></td>
+      <td>
+        <label for="query_is_for_all">
+          <%= check_box_tag 'query_is_for_all', 1, @query.project.nil?, class: (User.current.admin? ? '' : 'disable-unless-private') %>
+          &mdash;
+          <%= l(:field_is_for_all) %>
+        </label>
+
+        <div id="eq-hide-in-projects" style="padding-top: 10px;<%= ' display: none;'.html_safe unless @query.project.nil? %>">
+          <%= l(:eq_label_hide_query_for_projects) %>
+          <div class='eq-filter-data'>
+            <div class="eq-filter-data-list eq-filter-data-item">
+              <%= eq_filter_selector(Project.active.order(:name).map { |r| [r.name, r.id] }, selected: @query.eq_hide_in_project_ids, fullname: 'query[hide_in_projects][]', class: 'eq-columns-list') %>
+              <%= hidden_field_tag 'query[hide_in_projects][]', '' %>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="rmp-settings-group">
+      <td></td>
+      <td>
+        <%= l(:label_options) %>
+      </td>
+    </tr>
+    <% if Redmine::Plugin.installed?(:rm_business_time) && params[:cp_burndown].present? %>
+      <tr>
+        <td></td>
+        <td>
+          <label>
+            <%= check_box_tag 'query[cp_burndown][]', 'cp_burndown_work_off', (@query.cp_burndown || []).include?('cp_burndown_work_off') %>
+            &mdash;
+            <%= l(:cp_label_burndown_apply_work_off) %>
+          </label>
+        </td>
+      </tr>
+    <% end %>
+
+    <% if params[:gantt] %>
+      <tr>
+        <td>
+          <label><%= l(:button_show) %></label>
+        </td>
+        <td>
+          <label class="inline"><%= check_box_tag "query[draw_relations]", "1", @query.draw_relations %> &mdash; <%= t(:label_related_issues) %></label>
+          <label class="inline"><%= check_box_tag "query[draw_progress_line]", "1", @query.draw_progress_line %> &mdash; <%= l(:label_gantt_progress_line) %></label>
+        </td>
+      </tr>
+    <% elsif @query.new_record? %>
+      <tr>
+        <td></td>
+        <td>
+          <label for="query_default_columns">
+            <%= hidden_field_tag 'default_columns', 1 if params[:cp_burndown].present? %>
+            <%= check_box_tag 'default_columns', 1, @query.has_default_columns? || params[:cp_burndown].present?, id: 'query_default_columns', disabled: params[:cp_burndown].present? %>
+            &mdash;
+            <%= l(:label_default_columns) %>
+          </label>
+        </td>
+      </tr>
+    <% end %>
+    <% if Redmine::Plugin.installed?(:magic_my_page) %>
+      <tr>
+        <td><%= l(:label_mmp_legend_for_edit_queries) %></td>
+        <td>
+          <table>
+            <tr>
+              <td id="eq-mmp-available-columns">
+                <%= l(:description_available_columns) %>
+                <%
+                   available_columns = eq_query_available_inline_columns_options_for_mm_page(@query)
+                   available_columns = query_available_inline_columns_options(@query) if available_columns == []
+
+                   selected_columns = eq_query_selected_inline_columns_options_for_mm_page(@query)
+                   selected_columns = query_selected_inline_columns_options(@query) if selected_columns == []
+
+                   available_columns = available_columns - selected_columns
+                %>
+                <div class='eq-filter-data'>
+                  <div class="eq-filter-data-list eq-filter-data-item">
+                    <%= eq_filter_selector(available_columns.sort { |x,y| (x[0] || '') <=> (y[0] || '') }, fullname: 'mmp_column_names[]', class: 'eq-columns-list eq-available-columns-container') %>
+                  </div>
+                </div>
+              </td>
+              <td style="vertical-align: middle; box-sizing: border-box;">
+                <p>
+                  <%= link_to('&#8594;'.html_safe, '#', class: 'eq-button eq-add-column', style: 'margin-bottom: 5px;') %>
+                </p>
+                <p>
+                  <%= link_to('&#8592;'.html_safe, '#', class: 'eq-button eq-delete-column') %>
+                </p>
+              </td>
+              <td id="eq-mmp-selected-columns">
+                <%= l(:description_selected_columns) %>
+                <div class='eq-filter-data'>
+                  <div class="eq-filter-data-list eq-filter-data-item">
+                    <%= eq_filter_selector(selected_columns, class: 'eq-columns-list eq-columns-container', fullname: 'mmp_column_names[]', id: 'eq-mmp-columns-container') %>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+
+</div>
+<div class="modal-footer">
+  <%= submit_tag l(:button_save), onclick: "$('#eq-mmp-selected-columns [name=\"mmp_column_names[]\"]').prop('checked', true);" %>
+  <button aria-hidden="true" data-dismiss="modal" style="vertical-align: middle;"><%= l(:eq_label_close_window) %></button>
+</div>
+
+
+<script>
+  $(document).ready(function(){
+    $("input[name='query[visibility]']").change(function(){
+      var roles_checked = $('#query_visibility_1').is(':checked');
+      var private_checked = $('#query_visibility_0').is(':checked');
+      $("input[name='query[role_ids][]'][type=checkbox]").attr('disabled', !roles_checked);
+      if (!private_checked) $("input.disable-unless-private").attr('checked', false);
+      $("input.disable-unless-private").attr('disabled', !private_checked);
+    }).trigger('change');
+  });
+  $('#eq-roles-list, #eq-mmp-available-columns, #eq-mmp-selected-columns, #eq-hide-in-projects').eq_button({ just_search: true });
+
+  $('#query_is_for_all').change(function() {
+    if (this.checked) {
+      $('#eq-hide-in-projects').show();
+    } else {
+      $('#eq-hide-in-projects').hide();
+    }
+  });
+
+  RMPlus.Utils.makeSelect2Combobox($('#query_category_id').get(0));
+</script>

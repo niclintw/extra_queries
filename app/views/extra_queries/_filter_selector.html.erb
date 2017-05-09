@@ -1,0 +1,49 @@
+<% items = [] if items.blank?
+   selected = (options[:selected] || []).map(&:to_s)
+%>
+<div class="<%= options[:class] %>">
+  <div class="eq-filter-search">
+    <%= text_field_tag 'eq-search', '', placeholder: l(:eq_label_search_placeholder) , id: nil, class: 'eq-search' %>
+  </div>
+  <div class="eq-filter-list-container">
+    <ul<%= field || options[:id] ? " id='#{options[:id] ? options[:id] : "eq-filter-list-#{field}"}'".html_safe : '' %> class="eq-filter-list">
+      <li class="eq-filter-list-custom-actions eq-no-matches-ajax eq-out-search">
+        <span class="eq-init-msg"><%= l(:eq_label_no_matches_ajax) %></span>
+        <span class="eq-search-msg" style="display:none;"><%= l(:eq_label_searching_ajax) %></span>
+      </li>
+      <li class="eq-filter-list-custom-actions eq-no-matches eq-out-search">
+        <%= l(:eq_label_no_matches) %>
+      </li>
+      <li class="eq-filter-list-custom-actions eq-clear-filter eq-out-search">
+        <%= link_to l(:eq_label_clear_selected_values), '#', class: 'in_link eq-filter-list-clear' %>
+      </li>
+      <% items.each do |it| %>
+        <% it = it.is_a?(Array) ? it : [it, it] %>
+        <% if it[2].is_a?(Hash) && it[2][:group_title] %>
+          <li class="eq-filter-list-group">
+            <%= it[0] %>
+          </li>
+        <% else %>
+          <li class="eq-filter-list-item"<%= it[2] && it[2][:hide] ? ' style="display:none;"'.html_safe : '' %>>
+            <label>
+              <% if options[:radio] %>
+                <%= radio_button_tag options[:fullname] || "eq-values#{options[:name]}[]", it[1], selected.include?(it[1].to_s), id: "eq-value-#{field}-#{it[1]}", class: 'eq-value' %>
+              <% else %>
+                <%= check_box_tag options[:fullname] || "eq-values#{options[:name]}[]", it[1], selected.include?(it[1].to_s), id: "eq-value-#{field}-#{it[1]}", class: 'eq-value' %>
+              <% end %>
+
+              <% if it[2].is_a?(Hash) && it[2][:object].present? && it[2][:object].respond_to?(:render_query_filter_item) %>
+                <%= it[2][:object].render_query_filter_item(self) do |name| %>
+                  <span class="eq-value-text" data-text="<%= it[0] %>"><%= name %></span>
+                <% end %>
+              <% else %>
+                <span class="eq-value-text" data-text="<%= it[0] %>"><%= it[0] %></span>
+              <% end %>
+              <%= yield(it) if block_given? %>
+            </label>
+          </li>
+        <% end %>
+      <% end %>
+    </ul>
+  </div>
+</div>

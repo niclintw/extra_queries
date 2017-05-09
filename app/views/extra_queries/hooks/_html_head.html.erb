@@ -1,0 +1,22 @@
+<% if (%w(issues queries calendars cp_burndown).include?(controller.controller_name) || (controller.controller_name == 'gantts' && controller.action_name == 'show')) && (Setting.plugin_extra_queries['custom_query_page_enabled'] || Setting.plugin_extra_queries['custom_query_sidebar_enabled']) %>
+  <%= stylesheet_link_tag :extra_queries, plugin: :extra_queries %>
+  <%= javascript_include_tag :extra_queries, plugin: :extra_queries %>
+  <%= include_calendar_headers_tags %>
+
+  <% if @project.present? %>
+    <style type="text/css">
+      #sidebar > br:first-of-type,
+      #sidebar > ul:first-of-type,
+      .flyout-menu .js-sidebar > br:first-of-type,
+      .flyout-menu .js-sidebar > ul:first-of-type {
+        display: none;
+      }
+    </style>
+  <% end %>
+<% end %>
+
+<% if ['timelog'].include?(controller.controller_name) && Setting.plugin_extra_queries['custom_query_timelog_page_enabled'] %>
+  <%= stylesheet_link_tag :extra_queries, plugin: :extra_queries %>
+  <%= javascript_include_tag :extra_queries, plugin: :extra_queries %>
+  <%= include_calendar_headers_tags %>
+<% end %>

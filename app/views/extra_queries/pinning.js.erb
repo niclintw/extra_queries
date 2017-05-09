@@ -1,0 +1,8 @@
+<% if (params[:pin]) %>
+  <% if (@query.eq_pinned?) %>
+    RMPlus.EQ.pinning('#query-<%= @query.id %>', false, '<%= url_for({ controller: :extra_queries, action: :pinning, query_id: @query.id }) %>', '<%= l(:eq_title_unpin_query) %>');
+  <% end %>
+<% else %>
+  RMPlus.EQ.pinning('#pinned-query-<%= @query.id %>', true, '<%= url_for({ controller: :extra_queries, action: :pinning, query_id: @query.id, pin: 1 }) %>', '<%= l(:eq_title_pin_query) %>');
+<% end %>
+

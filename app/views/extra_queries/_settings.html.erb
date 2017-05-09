@@ -1,0 +1,67 @@
+<%
+  query = IssueQuery.new
+  filter_fields = [[l(:field_assigned_to), :assigned_to_id], [l(:field_author), :author_id]]
+  filter_fields += IssueCustomField.where("field_format = 'user'").order('name').collect { |cf| [cf.name, "cf_#{cf.id}"] }
+%>
+<table class="plugin_settings" style="width: 100%">
+  <tr>
+    <td></td>
+    <td>
+      <label for='settings_custom_query_page_enabled'>
+        <%= check_box_tag 'settings[custom_query_page_enabled]', 1, @settings['custom_query_page_enabled'] %>
+        &mdash;
+        <%= l(:eq_settings_custom_query_page_enabled) %>
+      </label>
+    </td>
+  </tr>
+
+  <tr>
+    <td></td>
+    <td>
+      <label for='settings_custom_query_timelog_page_enabled'>
+        <%= check_box_tag 'settings[custom_query_timelog_page_enabled]', 1, @settings['custom_query_timelog_page_enabled'] %>
+        &mdash;
+        <%= l(:eq_settings_custom_query_timelog_page_enabled) %>
+      </label>
+    </td>
+  </tr>
+
+  <tr>
+    <td></td>
+    <td>
+      <label for='settings_custom_query_sidebar_enabled'>
+        <%= check_box_tag 'settings[custom_query_sidebar_enabled]', 1, @settings['custom_query_sidebar_enabled'] %>
+        &mdash;
+        <%= l(:eq_settings_custom_query_sidebar_enabled) %>
+      </label>
+    </td>
+  </tr>
+
+
+  <tr>
+    <td></td>
+    <td>
+      <label for='settings_custom_query_counter_enabled'>
+        <%= check_box_tag 'settings[custom_query_counter_enabled]', 1, @settings['custom_query_counter_enabled'], disabled: !Redmine::Plugin.installed?(:ajax_counters), title: l(:eq_custom_query_counter_enabled_dependency) %>
+        &mdash;
+        <%= l(:eq_settings_custom_query_counter_enabled) %>
+      </label>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      <label for='settings_default_filter_fields'><%= l(:eq_settings_default_filter_fields) %></label>
+    </td>
+    <td>
+      <%= select_tag 'settings[default_filter_fields][]', options_for_select(query.all_available_filters.map { |k, v| [v[:name], k] }, @settings[:default_filter_fields]), multiple: true, size: 8, class: 'select2' %>
+    </td>
+  </tr>
+
+  <tr>
+    <td></td>
+    <td id="settings_save_button">
+      <%= render file: File.join(File.dirname(__FILE__), "_rmplus_logo.html.erb") %>
+    </td>
+  </tr>
+</table>

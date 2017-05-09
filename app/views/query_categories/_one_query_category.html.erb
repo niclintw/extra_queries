@@ -1,0 +1,19 @@
+<tr id="query-category-<%= qc.id %>">
+  <td class="H"><%= qc.name %></td>
+  <td class="H"><%= link_to_user(qc.user) %></td>
+  <td class="H" style="text-align:right; padding-right: 5px; width: 1px;">
+    <nobr>
+      <%= link_to( content_tag(:span,l(:button_edit)),
+                   {controller: 'query_categories', action: 'edit', id: qc.id},
+                   remote: true,
+                   class: 'icon icon-edit in_link eq_ajax_edit',
+                   data: {target: 'query_categories_form'}) %>
+      <%= link_to( content_tag(:span,l(:button_delete)),
+                   {controller: 'query_categories', action: 'destroy', id: qc.id},
+                   class: 'icon icon-del in_link',
+                   method: :delete,
+                   remote: true,
+                   data: { confirm: l(:confirm_delete_query_category) }) %>
+    </nobr>
+  </td>
+</tr>

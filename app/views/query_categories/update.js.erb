@@ -1,0 +1,12 @@
+$('#query_categories_form').modal('hide');
+var prev_tr = $('#query-category-<%= @query_category.id %>').prev('tr');
+$('#query-category-<%= @query_category.id %>').remove();
+if(prev_tr.length == 0){
+    $('<%= escape_javascript(render partial: 'one_query_category',  locals: {qc: @query_category} ) %>').prependTo($('#content').find('> div.autoscroll > table > tbody'));
+}else{
+    $('<%= escape_javascript(render partial: 'one_query_category',  locals: {qc: @query_category} ) %>').insertAfter(prev_tr);
+}
+
+$('#query-category-<%= @query_category.id %>').effect('highlight', 500);
+$("#query-category-<%= @query_category.id %>").append("<td class='ordered-hndl'> ≡ </td>");
+$("div.autoscroll > .list > tbody").sortable( "refresh" );

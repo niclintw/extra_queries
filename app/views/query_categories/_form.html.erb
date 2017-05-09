@@ -1,0 +1,20 @@
+<%= form_for @query_category , remote: true, id: 'query-category-form' do |f| %>
+    <div class="modal-body">
+        <h2><%= @query_category.new_record? ? l(:eq_label_new_query_category) : l(:eq_label_query_categories) %></h2>
+        <div>
+          <%= f.label(:name, (l(:field_name)+content_tag(:span, ' *', :class => 'required')).html_safe) %>
+          <br>
+          <%= f.text_field :name, style: 'width: 100%; max-width: 100%;' %>
+        </div>
+        <br>
+        <% if @query_category.query.any? %>
+            <div>
+              <p><%= l(:eq_dependent_query) %>: <%= @query_category.query.map {|q| q.name}.join(', ') %></p>
+            </div>
+        <% end %>
+    </div>
+    <div class="modal-footer">
+      <%= f.submit( l(:button_save), style: 'margin: 0px;') %>
+      <button class="" data-dismiss="modal" aria-hidden="true" style="vertical-align: middle;"><%= l(:lib_close) %></button>
+    </div>
+<% end %>

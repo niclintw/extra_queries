@@ -1,0 +1,5 @@
+<% if params[:query_group] == 'queries' %>
+  <%= eq_render_sidebar_queries %>
+<% elsif params[:query_group] == 'categories' %>
+  <%= eq_render_categories_links %>
+<% end %>

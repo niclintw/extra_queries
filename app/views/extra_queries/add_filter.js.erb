@@ -1,0 +1,7 @@
+<% (@fields || []).each do |field| %>
+<%
+  v = @query.available_filters[field]
+  next if v.blank?
+%>
+<%= eq_render_filter_field(@query, field, v) %>
+<% end %>

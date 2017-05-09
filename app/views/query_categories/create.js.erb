@@ -1,0 +1,5 @@
+$('#query_categories_form').modal('hide');
+$('<%= escape_javascript(render partial: 'one_query_category',  locals: {qc: @query_category} ) %>').appendTo('#content > div.autoscroll > table > tbody');
+$('#query-category-<%= @query_category.id %>').effect('highlight', 500);
+$("#query-category-<%= @query_category.id %>").append("<td class='ordered-hndl'> ≡ </td>");
+$("div.autoscroll > .list > tbody").sortable( "refresh" );

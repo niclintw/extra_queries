@@ -1,0 +1,13 @@
+<% if @query.errors.present? %>
+  $('#content').find('.flash').remove();
+  $('#errorExplanation').remove();
+
+  $('#eq-query-modal').find('.modal-body').prepend('<%= escape_javascript(error_messages_for(@query)) %>');
+<% else %>
+  $('div.loader').html(' ');
+  $(document.body).removeData('ajax_emmiter');
+  $('#eq-query-modal').find('input[type="submit"]').removeClass('ajax_hidden_emmiter');
+
+
+  window.location.href = '<%= eq_redirect_to_issues_path(query_id: @query.id) %>';
+<% end %>
